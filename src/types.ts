@@ -31,7 +31,7 @@ export interface SchoolInfo {
   location: string;
 }
 
-export type WidgetTheme = 'dark-acrylic' | 'light-acrylic' | 'slate-glass' | 'emerald-glass' | 'indigo-glass' | 'sakura-glass';
+export type WidgetTheme = 'dark-acrylic' | 'light-acrylic' | 'slate-glass' | 'emerald-glass' | 'indigo-glass' | 'sakura-glass' | 'amber-glass' | 'mono-glass';
 
 export interface WidgetConfig {
   school: SchoolInfo;
@@ -51,6 +51,9 @@ export interface WidgetConfig {
   userRole: 'teacher' | 'student';
   gradeClass?: string; // e.g. "3-2"
   fontScale: number; // 0.85 ~ 1.3, 1.0 = 기본 글씨 크기
+  autoStartOnLogin: boolean; // 컴퓨터 시작 시 자동 실행 (HKCU Run 키 등록)
+  customAccentColor?: string; // 지정 시 테마 프리셋의 accent 색을 대체하는 hex 색상
+  cornerRadius: number; // 위젯 바깥 테두리 둥근 정도(px), 기본 18
 }
 
 export interface MealData {

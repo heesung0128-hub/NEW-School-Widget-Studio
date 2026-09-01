@@ -1,4 +1,21 @@
 import { WidgetConfig } from '../types';
+import { WIDGET_ICON_BASE64 } from '../assets/widgetIcon';
+
+// 설정이 바뀔 때마다 값이 달라지는 짧은 해시. 컴파일된 전용 exe가 지금 설정과 같은 버전인지
+// 판별하는 용도로만 쓰이므로(암호학적 강도는 불필요) cyrb53 알고리즘을 그대로 사용.
+function hashConfig(obj: unknown): string {
+  const str = JSON.stringify(obj);
+  let h1 = 0xdeadbeef ^ str.length;
+  let h2 = 0x41c6ce57 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+}
 
 export function generatePowerShellScript(config: WidgetConfig): string {
   const {
@@ -16,11 +33,17 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     showCalories,
     userRole,
     fontScale,
+    autoStartOnLogin,
+    customAccentColor,
+    cornerRadius,
   } = config;
 
   // 위젯 전체 글씨/요소 배율 (스튜디오의 "글씨 크기" 슬라이더 값). 창 자체와 내부 콘텐츠를
   // 함께 스케일해서 시뮬레이터의 CSS zoom과 동일하게 동작하도록 함.
   const scale = fontScale && fontScale > 0 ? fontScale : 1;
+  const radius = cornerRadius && cornerRadius > 0 ? cornerRadius : 18;
+  const innerRadius = Math.max(6, Math.round(radius * 0.65));
+  const configHash = hashConfig(config);
 
   const [switchH, switchM] = mealSwitchTime.split(':').map(Number);
   const switchHour = isNaN(switchH) ? 13 : switchH;
@@ -32,62 +55,105 @@ export function generatePowerShellScript(config: WidgetConfig): string {
   const todosJson = JSON.stringify(todos).replace(/'/g, "''");
 
   // Determine colors based on theme - these are the exact Tailwind classes/opacities
-  // that SchoolWidgetCard.tsx (the browser simulator) uses for each theme, converted
+  // that Widget.tsx (the browser simulator) uses for each theme, converted
   // to WPF ARGB hex, so the real widget matches the simulator's color tone.
-  //   dark-acrylic:  container bg-slate-900/90, card bg-slate-800/70, border border-slate-700/50,
-  //                  text text-slate-100, subText text-slate-400, accent text-blue-400
+  // border/subText/accentBg는 Widget.tsx의 themeClasses에서 실제로 렌더링에 쓰이는
+  // container/card 문자열 및 accentBg 필드 기준(단, 안 쓰이는 standalone `border`
+  // 필드는 무시) — 여기 값을 바꿀 때는 반드시 Widget.tsx의 실제 클래스와 다시 대조할 것.
+  //   dark-acrylic:  container bg-slate-900/90, card bg-slate-800/70, border border-slate-700/60,
+  //                  text text-slate-100, subText text-slate-400, accent text-blue-400, accentBg bg-blue-600
   let containerBg = '#E60F172A';
   let cardBg = '#B31E293B';
-  let cardBorder = '#80334155';
+  let cardBorder = '#99334155';
   let textPrimary = '#F1F5F9';
   let textSecondary = '#94A3B8';
   let accentColor = '#60A5FA';
+  // 뱃지/아이콘/보조텍스트처럼 연한 톤인 accentColor와 달리, 버튼처럼 배경을
+  // 통째로 채우는 요소는 시뮬레이터의 accentBg(진한 600번대 톤)를 반영해야 함
+  let accentButtonColor = '#2563EB';
+  let buttonTextColor = '#FFFFFF';
 
   if (theme === 'light-acrylic') {
     // container bg-white/95, card bg-slate-50/90, border border-slate-200/80,
-    // text text-slate-800, subText text-slate-500, accent text-blue-600
+    // text text-slate-800, subText text-slate-500, accent text-blue-600, accentBg bg-blue-600
     containerBg = '#F2FFFFFF';
     cardBg = '#E6F8FAFC';
     cardBorder = '#CCE2E8F0';
     textPrimary = '#1E293B';
     textSecondary = '#64748B';
     accentColor = '#2563EB';
+    accentButtonColor = '#2563EB';
   } else if (theme === 'emerald-glass') {
     // container bg-emerald-950/90, card bg-emerald-900/60, border border-emerald-700/50,
-    // text text-emerald-50, subText text-emerald-300, accent text-emerald-400
+    // text text-emerald-50, subText text-emerald-300/80, accent text-emerald-400, accentBg bg-emerald-600
     containerBg = '#E6022C22';
     cardBg = '#99064E3B';
     cardBorder = '#80047857';
     textPrimary = '#ECFDF5';
-    textSecondary = '#6EE7B7';
+    textSecondary = '#CC6EE7B7';
     accentColor = '#34D399';
+    accentButtonColor = '#059669';
   } else if (theme === 'indigo-glass') {
     // container bg-indigo-950/90, card bg-indigo-900/60, border border-indigo-700/50,
-    // text text-indigo-50, subText text-indigo-300, accent text-indigo-400
+    // text text-indigo-50, subText text-indigo-300/80, accent text-indigo-400, accentBg bg-indigo-600
     containerBg = '#E61E1B4B';
     cardBg = '#99312E81';
     cardBorder = '#804338CA';
     textPrimary = '#EEF2FF';
-    textSecondary = '#A5B4FC';
+    textSecondary = '#CCA5B4FC';
     accentColor = '#818CF8';
+    accentButtonColor = '#4F46E5';
   } else if (theme === 'slate-glass') {
     // container bg-slate-700/85, card bg-slate-600/60, border border-slate-500/50,
-    // text text-slate-50, subText text-slate-300, accent text-sky-400
+    // text text-slate-50, subText text-slate-300, accent text-sky-400, accentBg bg-sky-600
     containerBg = '#D9334155';
     cardBg = '#99475569';
     cardBorder = '#8064748B';
     textPrimary = '#F8FAFC';
     textSecondary = '#CBD5E1';
     accentColor = '#38BDF8';
+    accentButtonColor = '#0284C7';
   } else if (theme === 'sakura-glass') {
     // container bg-pink-950/90, card bg-pink-900/60, border border-pink-700/50,
-    // text text-pink-50, subText text-pink-300, accent text-pink-400
+    // text text-pink-50, subText text-pink-300, accent text-pink-400, accentBg bg-pink-600
     containerBg = '#E6500724';
     cardBg = '#99831843';
     cardBorder = '#80BE185D';
     textPrimary = '#FDF2F8';
     textSecondary = '#F9A8D4';
     accentColor = '#F472B6';
+    accentButtonColor = '#DB2777';
+  } else if (theme === 'amber-glass') {
+    // container bg-amber-950/90, card bg-amber-900/60, border border-amber-700/50,
+    // text text-amber-50, subText text-amber-300/80, accent text-amber-400, accentBg bg-amber-600
+    containerBg = '#E6451A03';
+    cardBg = '#9978350F';
+    cardBorder = '#80B45309';
+    textPrimary = '#FFFBEB';
+    textSecondary = '#CCFCD34D';
+    accentColor = '#FBBF24';
+    accentButtonColor = '#D97706';
+  } else if (theme === 'mono-glass') {
+    // container bg-neutral-950/95, card bg-neutral-900/70, border border-neutral-700/60,
+    // text text-neutral-50, subText text-neutral-400, accent text-yellow-400, accentBg bg-yellow-500 text-black
+    // (흑백 바탕 + 옐로 포인트 — 버튼은 연노랑 배경이라 흰 글씨는 대비가 거의 안 나와서 검은 글씨로 대체)
+    containerBg = '#F20A0A0A';
+    cardBg = '#B3171717';
+    cardBorder = '#99404040';
+    textPrimary = '#FAFAFA';
+    textSecondary = '#A3A3A3';
+    accentColor = '#FACC15';
+    accentButtonColor = '#EAB308';
+    buttonTextColor = '#000000';
+  }
+
+  // 사용자가 커스텀 강조색을 지정했으면 테마 프리셋의 accent/버튼 색을 모두 대체.
+  // 시뮬레이터도 커스텀 색일 때는 항상 흰 글씨를 쓰므로(mono-glass 프리셋 전용
+  // 예외였을 뿐) buttonTextColor는 흰색으로 되돌린다.
+  if (customAccentColor) {
+    accentColor = customAccentColor;
+    accentButtonColor = customAccentColor;
+    buttonTextColor = '#FFFFFF';
   }
 
   // Build script using string array join to prevent template literal backtick collisions
@@ -106,11 +172,38 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '================================================================================',
     '#>',
     '',
-    '# 0. 콘솔 창 없이 조용히 재실행 (최초 1회만) - "PowerShell에서 실행"으로 띄워도 검은 창이 뜨지 않도록',
-    'if ($PSCommandPath -and ($env:NEWSCHOOLWIDGET_RELAUNCHED -ne "1")) {',
-    '    $env:NEWSCHOOLWIDGET_RELAUNCHED = "1"',
-    '    Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$PSCommandPath`""',
-    '    Exit',
+    '# 0. 전용 실행파일(.exe) 자동 준비',
+    '#    - 이 스크립트가 설정과 함께 컴파일된 고유 .exe로 다시 태어나면, 이후 실행부터는 그 exe로',
+    '#      바로 넘어가기 때문에 작업표시줄/작업관리자에 "Windows PowerShell"이 아니라 전용',
+    '#      아이콘·이름("학교 생활 위젯")으로 보이고 콘솔/보안 경고도 거치지 않게 됨.',
+    `$Global:ConfigHash = "${configHash}"`,
+    '$Global:AppDir  = Join-Path $env:LOCALAPPDATA "NEWSchoolWidget"',
+    '$Global:AppExe  = Join-Path $Global:AppDir "NEWSchoolWidget.exe"',
+    '$Global:AppMeta = Join-Path $Global:AppDir "build-meta.json"',
+    'if (-not (Test-Path $Global:AppDir)) { New-Item -ItemType Directory -Path $Global:AppDir -Force | Out-Null }',
+    '',
+    '# 지금 이 코드를 실행 중인 게 이미 컴파일된 exe 자신인지 확인 (powershell.exe로 돌고 있으면 원본 상태)',
+    'try {',
+    '    $Global:RunningAsCompiledExe = ([System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName) -like "*NEWSchoolWidget.exe"',
+    '} catch { $Global:RunningAsCompiledExe = $false }',
+    '',
+    'if (-not $Global:RunningAsCompiledExe) {',
+    '    # 0.1 이미 지금 설정 그대로 컴파일된 exe가 있으면 PowerShell 대신 그쪽으로 바로 넘김',
+    '    $existingMeta = $null',
+    '    if (Test-Path $Global:AppMeta) {',
+    '        try { $existingMeta = Get-Content $Global:AppMeta -Raw -Encoding UTF8 | ConvertFrom-Json } catch { }',
+    '    }',
+    '    if ((Test-Path $Global:AppExe) -and $existingMeta -and ($existingMeta.configHash -eq $Global:ConfigHash)) {',
+    '        Start-Process -FilePath $Global:AppExe',
+    '        Exit',
+    '    }',
+    '',
+    '    # 0.2 콘솔 창 없이 조용히 재실행 (최초 1회만) - "PowerShell에서 실행"으로 띄워도 검은 창이 뜨지 않도록',
+    '    if ($PSCommandPath -and ($env:NEWSCHOOLWIDGET_RELAUNCHED -ne "1")) {',
+    '        $env:NEWSCHOOLWIDGET_RELAUNCHED = "1"',
+    '        Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Sta -WindowStyle Hidden -File `"$PSCommandPath`""',
+    '        Exit',
+    '    }',
     '}',
     '',
     'try {',
@@ -136,6 +229,51 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '    Add-Type -AssemblyName System.Drawing',
     '    Add-Type -AssemblyName System.Xml',
     '',
+    '    # 1.5 백그라운드에서 전용 실행파일(.exe) 준비 (설정이 그대로면 건너뜀). 이미 컴파일된 exe로',
+    '    # 실행 중일 때는 스스로를 또 컴파일할 필요가 없으므로 건너뜀. 위젯 UI는 이 작업을 기다리지 않음.',
+    '    function Start-BackgroundCompile {',
+    '        if (Test-Path $Global:AppExe) {',
+    '            $meta = $null',
+    '            if (Test-Path $Global:AppMeta) { try { $meta = Get-Content $Global:AppMeta -Raw -Encoding UTF8 | ConvertFrom-Json } catch { } }',
+    '            if ($meta -and ($meta.configHash -eq $Global:ConfigHash)) { return }',
+    '        }',
+    '        if (-not $PSCommandPath) { return }',
+    '        $srcPath  = $PSCommandPath',
+    '        $exePath  = $Global:AppExe',
+    '        $metaPath = $Global:AppMeta',
+    `        $iconB64  = "${WIDGET_ICON_BASE64}"`,
+    '        $hashVal  = $Global:ConfigHash',
+    '        Start-Job -ScriptBlock {',
+    '            param($srcPath, $exePath, $metaPath, $iconB64, $hashVal)',
+    '            try {',
+    '                if (-not (Get-Module -ListAvailable -Name ps2exe)) {',
+    '                    # PSGallery가 기본적으로 Untrusted 상태라 Install-Module -Force만으로는',
+    '                    # (특히 Windows PowerShell 5.1 번들 PowerShellGet에서) 확인 프롬프트를 완전히',
+    '                    # 우회하지 못해 백그라운드(비대화형)에서는 조용히 실패할 수 있음 — 신뢰 등록과',
+    '                    # NuGet 공급자 부트스트랩을 먼저 명시적으로 해 둠',
+    '                    if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {',
+    '                        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser -ErrorAction Stop | Out-Null',
+    '                    }',
+    '                    if ((Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue).InstallationPolicy -ne "Trusted") {',
+    '                        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction SilentlyContinue',
+    '                    }',
+    '                    Install-Module -Name ps2exe -Scope CurrentUser -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop',
+    '                }',
+    '                Import-Module ps2exe -ErrorAction Stop',
+    '                $buildDir = Join-Path $env:TEMP "NEWSchoolWidgetBuild"',
+    '                New-Item -ItemType Directory -Path $buildDir -Force | Out-Null',
+    '                $iconPath = Join-Path $buildDir "icon.ico"',
+    '                [System.IO.File]::WriteAllBytes($iconPath, [Convert]::FromBase64String($iconB64))',
+    '                $tmpExe = Join-Path $buildDir "NEWSchoolWidget.exe"',
+    '                Invoke-ps2exe -inputFile $srcPath -outputFile $tmpExe -iconFile $iconPath -noConsole -STA `',
+    '                    -title "학교 생활 위젯" -product "NEWSchoolWidget" -company "NEWSchoolWidget" -version "1.0.0.0" -ErrorAction Stop',
+    '                Copy-Item -Path $tmpExe -Destination $exePath -Force',
+    '                @{ configHash = $hashVal; builtAt = (Get-Date).ToString("o") } | ConvertTo-Json | Set-Content -Path $metaPath -Encoding UTF8',
+    '            } catch { }',
+    '        } -ArgumentList $srcPath, $exePath, $metaPath, $iconB64, $hashVal | Out-Null',
+    '    }',
+    '    if (-not $Global:RunningAsCompiledExe) { Start-BackgroundCompile }',
+    '',
     '    # 2. 전역 설정 데이터',
     `    $Global:OfficeCode    = "${school.officeCode}"`,
     `    $Global:SchoolCode    = "${school.schoolCode}"`,
@@ -151,6 +289,7 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     `    $Global:ShowAllergies = $${showAllergies ? 'True' : 'False'}`,
     `    $Global:ShowCalories  = $${showCalories ? 'True' : 'False'}`,
     `    $Global:UserRoleText  = "${userRole === 'teacher' ? '교사용' : '학생용'}"`,
+    `    $Global:AutoStartOnLogin = $${autoStartOnLogin ? 'True' : 'False'}`,
     '',
     '    # 할 일 파일 경로 (내 문서\\NEWSchoolWidget\\todos.json)',
     '    $Global:TodoDir  = [System.IO.Path]::Combine($env:USERPROFILE, "Documents", "NEWSchoolWidget")',
@@ -189,7 +328,7 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '    SnapsToDevicePixels="True"',
     '    FontFamily="맑은 고딕, Segoe UI, Malgun Gothic">',
     '',
-    `    <Border Margin="10" CornerRadius="18" BorderThickness="1" BorderBrush="${cardBorder}" Background="${containerBg}" Opacity="${opacity}">`,
+    `    <Border Margin="10" CornerRadius="${radius}" BorderThickness="1" BorderBrush="${cardBorder}" Background="${containerBg}" Opacity="${opacity}">`,
     '        <Border.LayoutTransform>',
     `            <ScaleTransform ScaleX="${scale}" ScaleY="${scale}"/>`,
     '        </Border.LayoutTransform>',
@@ -236,7 +375,7 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '            <WrapPanel x:Name="PnlDDays" Grid.Row="2" Width="288" HorizontalAlignment="Left" Margin="0,0,0,10" />',
     '',
     '            <!-- Row 3: Timetable Section -->',
-    `            <Border Grid.Row="3" Background="${cardBg}" BorderBrush="${cardBorder}" BorderThickness="1" CornerRadius="12" Padding="10" Margin="0,0,0,10">`,
+    `            <Border Grid.Row="3" Background="${cardBg}" BorderBrush="${cardBorder}" BorderThickness="1" CornerRadius="${innerRadius}" Padding="10" Margin="0,0,0,10">`,
     '                <StackPanel>',
     '                    <Grid Margin="0,0,0,8">',
     '                        <StackPanel Orientation="Horizontal">',
@@ -252,7 +391,7 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '            </Border>',
     '',
     '            <!-- Row 4: NEIS Meal Section -->',
-    `            <Border Grid.Row="4" Background="${cardBg}" BorderBrush="${cardBorder}" BorderThickness="1" CornerRadius="12" Padding="10" Margin="0,0,0,10">`,
+    `            <Border Grid.Row="4" Background="${cardBg}" BorderBrush="${cardBorder}" BorderThickness="1" CornerRadius="${innerRadius}" Padding="10" Margin="0,0,0,10">`,
     '                <StackPanel>',
     '                    <Grid Margin="0,0,0,6">',
     '                        <StackPanel Orientation="Horizontal">',
@@ -274,7 +413,7 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '            </Border>',
     '',
     '            <!-- Row 5: To-Do Section (동적 크기 조절) -->',
-    `            <Border Grid.Row="5" Background="${cardBg}" BorderBrush="${cardBorder}" BorderThickness="1" CornerRadius="12" Padding="10" Margin="0,0,0,0">`,
+    `            <Border Grid.Row="5" Background="${cardBg}" BorderBrush="${cardBorder}" BorderThickness="1" CornerRadius="${innerRadius}" Padding="10" Margin="0,0,0,0">`,
     '                <StackPanel>',
     '                    <Grid Margin="0,0,0,6">',
     '                        <StackPanel Orientation="Horizontal">',
@@ -291,7 +430,7 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '                            <ColumnDefinition Width="Auto"/>',
     '                        </Grid.ColumnDefinitions>',
     `                        <TextBox x:Name="TxtNewTodo" Grid.Column="0" Height="26" Background="#22000000" Foreground="${textPrimary}" BorderBrush="${cardBorder}" BorderThickness="1" Padding="6,3" VerticalContentAlignment="Center" FontSize="12"/>`,
-    `                        <Button x:Name="BtnAddTodo" Grid.Column="1" Content="추가" Width="44" Height="26" Margin="4,0,0,0" Background="${accentColor}" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Cursor="Hand" FontSize="11"/>`,
+    `                        <Button x:Name="BtnAddTodo" Grid.Column="1" Content="추가" Width="44" Height="26" Margin="4,0,0,0" Background="${accentButtonColor}" Foreground="${buttonTextColor}" FontWeight="Bold" BorderThickness="0" Cursor="Hand" FontSize="11"/>`,
     '                    </Grid>',
     '',
     '                    <!-- Dynamic Items List (시뮬레이터의 max-h-48 overflow-y-auto와 동일하게 -->',
@@ -465,6 +604,22 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '        } catch { }',
     '    }',
     '',
+    '    # 6.6 자동 시작 설정 동기화 (컴퓨터 시작 시 자동 실행 체크박스)',
+    '    # HKCU 아래라서 관리자 권한 불필요. exe가 아직 컴파일 전이어도 경로만 미리 등록해 두고,',
+    '    # 다음 로그인 즈음엔 exe가 준비돼 있는 게 보통이라 문제 없음.',
+    '    function Sync-AutoStart {',
+    '        try {',
+    '            $runKey = "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"',
+    '            if ($Global:AutoStartOnLogin) {',
+    '                Set-ItemProperty -Path $runKey -Name "NEWSchoolWidget" -Value "`"$($Global:AppExe)`"" -Force',
+    '            } else {',
+    '                if (Get-ItemProperty -Path $runKey -Name "NEWSchoolWidget" -ErrorAction SilentlyContinue) {',
+    '                    Remove-ItemProperty -Path $runKey -Name "NEWSchoolWidget" -ErrorAction SilentlyContinue',
+    '                }',
+    '            }',
+    '        } catch { }',
+    '    }',
+    '',
     '    # 7. D-Day 렌더링 함수',
     '    function Update-DDays {',
     '        $Global:PnlDDays.Children.Clear()',
@@ -539,8 +694,8 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '    function Refresh-DaySelectorHighlight {',
     '        foreach ($btn in $Global:PnlDaySelector.Children) {',
     '            if ($btn.Tag -eq $Global:SelectedDay) {',
-    `                $btn.Background = (New-Object System.Windows.Media.BrushConverter).ConvertFromString("${accentColor}")`,
-    '                $btn.Foreground = (New-Object System.Windows.Media.BrushConverter).ConvertFromString("#FFFFFF")',
+    `                $btn.Background = (New-Object System.Windows.Media.BrushConverter).ConvertFromString("${accentButtonColor}")`,
+    `                $btn.Foreground = (New-Object System.Windows.Media.BrushConverter).ConvertFromString("${buttonTextColor}")`,
     '            } else {',
     '                $btn.Background = [System.Windows.Media.Brushes]::Transparent',
     `                $btn.Foreground = (New-Object System.Windows.Media.BrushConverter).ConvertFromString("${textSecondary}")`,
@@ -1026,6 +1181,13 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '',
     '    $Global:Window.Add_Loaded({',
     '        try {',
+    '            # 창이 뿅 나타나지 않고 부드럽게 페이드인 되도록',
+    '            $fadeAnim = New-Object System.Windows.Media.Animation.DoubleAnimation',
+    '            $fadeAnim.From = 0',
+    '            $fadeAnim.To = 1',
+    '            $fadeAnim.Duration = New-Object System.Windows.Duration ([TimeSpan]::FromMilliseconds(220))',
+    '            $Global:Window.BeginAnimation([System.Windows.Window]::OpacityProperty, $fadeAnim)',
+    '',
     '            $startDaysKorean = @("일", "월", "화", "수", "목", "금", "토")',
     '            $startDayName = $startDaysKorean[[int](Get-Date).DayOfWeek]',
     '            $Global:SelectedDay = if ($Global:DaysKorean5 -contains $startDayName) { $startDayName } else { "월" }',
@@ -1033,6 +1195,7 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '            Update-AllData',
     '            Render-Todos',
     '            Snap-ToRightTop',
+    '            Sync-AutoStart',
     '        } catch {',
     '            Write-Warning "위젯 초기화 경고: $_"',
     '        }',

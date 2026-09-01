@@ -522,6 +522,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   { id: 'emerald-glass', name: '에메랄드 포레스트', desc: '편안한 녹색 톤' },
                   { id: 'indigo-glass', name: '딥 인디고 블루', desc: '고급스러운 야간 톤' },
                   { id: 'sakura-glass', name: '사쿠라 핑크', desc: '은은한 벚꽃 핑크 톤' },
+                  { id: 'amber-glass', name: '앰버 선라이즈', desc: '따뜻한 호박색 톤' },
+                  { id: 'mono-glass', name: '모노 하이컨트라스트', desc: '흑백 고대비 + 옐로 포인트' },
                 ].map((th) => (
                   <button
                     key={th.id}
@@ -541,6 +543,50 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Custom Accent Color */}
+            <div>
+              <div className={`flex items-center justify-between ${sz('text-base','text-xs')} font-semibold text-slate-300 mb-1`}>
+                <span>커스텀 강조색 (선택)</span>
+                {config.customAccentColor && (
+                  <button
+                    type="button"
+                    onClick={() => onUpdateConfig({ ...config, customAccentColor: undefined })}
+                    className={`${sz('text-[13px]','text-[10px]')} text-slate-400 hover:text-white underline underline-offset-2`}
+                  >
+                    테마 기본색으로 되돌리기
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={config.customAccentColor || '#3B82F6'}
+                  onChange={(e) => onUpdateConfig({ ...config, customAccentColor: e.target.value })}
+                  className="w-10 h-8 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer"
+                />
+                <span className={`${sz('text-[13px]','text-[10px]')} text-slate-400`}>
+                  지정하면 할 일 추가 버튼, 요일 선택 강조색 등 테마의 강조색을 대체합니다.
+                </span>
+              </div>
+            </div>
+
+            {/* Corner Radius slider */}
+            <div>
+              <div className={`flex justify-between ${sz('text-base','text-xs')} font-semibold text-slate-300 mb-1`}>
+                <span>모서리 둥근 정도</span>
+                <span className="text-blue-400">{config.cornerRadius ?? 18}px</span>
+              </div>
+              <input
+                type="range"
+                min="4"
+                max="28"
+                step="1"
+                value={config.cornerRadius ?? 18}
+                onChange={(e) => onUpdateConfig({ ...config, cornerRadius: parseInt(e.target.value) })}
+                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
             </div>
 
             {/* Font Scale slider */}
@@ -646,6 +692,22 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                 type="checkbox"
                 checked={config.alwaysOnTop}
                 onChange={(e) => onUpdateConfig({ ...config, alwaysOnTop: e.target.checked })}
+                className="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0 cursor-pointer"
+              />
+            </div>
+
+            {/* Toggle Auto Start On Login */}
+            <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+              <div>
+                <div className={`${sz('text-base','text-xs')} font-bold text-slate-200`}>컴퓨터 시작 시 자동 실행</div>
+                <div className={`${sz('text-[14px]','text-[11px]')} text-slate-400`}>
+                  최초 실행 후 자동 생성되는 전용 실행 파일을 로그인할 때마다 자동으로 띄웁니다.
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={config.autoStartOnLogin}
+                onChange={(e) => onUpdateConfig({ ...config, autoStartOnLogin: e.target.checked })}
                 className="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0 cursor-pointer"
               />
             </div>

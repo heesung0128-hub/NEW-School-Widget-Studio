@@ -220,6 +220,24 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
       accent: 'text-indigo-400',
       accentBg: 'bg-indigo-600 hover:bg-indigo-500 text-white',
     },
+    'amber-glass': {
+      container: 'bg-amber-950/90 text-amber-50 backdrop-blur-xl border-amber-700/50 shadow-2xl shadow-black/60',
+      card: 'bg-amber-900/60 border-amber-700/50',
+      border: 'border-amber-700/40',
+      text: 'text-amber-50',
+      subText: 'text-amber-300/80',
+      accent: 'text-amber-400',
+      accentBg: 'bg-amber-600 hover:bg-amber-500 text-white',
+    },
+    'mono-glass': {
+      container: 'bg-neutral-950/95 text-neutral-50 backdrop-blur-xl border-neutral-700/60 shadow-2xl shadow-black/60',
+      card: 'bg-neutral-900/70 border-neutral-700/60',
+      border: 'border-neutral-700/50',
+      text: 'text-neutral-50',
+      subText: 'text-neutral-400',
+      accent: 'text-yellow-400',
+      accentBg: 'bg-yellow-500 hover:bg-yellow-400 text-black',
+    },
   };
 
   const currentTheme = themeClasses[config.theme] || themeClasses['dark-acrylic'];
@@ -234,11 +252,12 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
   return (
     <div
       id="school-widget-main-container"
-      className={`relative rounded-2xl border transition-all duration-300 overflow-hidden select-none ${currentTheme.container}`}
+      className={`relative border transition-all duration-300 overflow-hidden select-none ${currentTheme.container}`}
       style={{
         width: `${config.widgetWidth || 330}px`,
         opacity: config.opacity || 0.95,
         zoom: config.fontScale || 1,
+        borderRadius: `${config.cornerRadius ?? 18}px`,
       }}
     >
       {/* Top Header / Drag Bar */}
@@ -336,6 +355,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
                       ? `${currentTheme.accentBg} shadow-xs`
                       : 'text-slate-400 hover:text-white'
                   }`}
+                  style={selectedDay === day && config.customAccentColor ? { backgroundColor: config.customAccentColor, color: '#fff' } : undefined}
                 >
                   {day}
                 </button>
@@ -477,6 +497,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
             <button
               type="submit"
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${currentTheme.accentBg}`}
+              style={config.customAccentColor ? { backgroundColor: config.customAccentColor, color: '#fff' } : undefined}
             >
               추가
             </button>

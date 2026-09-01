@@ -34,6 +34,38 @@ import {
 import { generatePowerShellScript, generateAllInOneBat } from './utils/powerShellGenerator';
 
 const STORAGE_KEY = 'school_widget_config_v1';
+const ONBOARDING_DISMISSED_KEY = 'school_widget_onboarding_dismissed_v1';
+
+// ---------------------------------------------------------------------------
+// 다운로드/복사 로직 — 헤더의 빠른 실행 버튼과 "코드" 탭의 CodeViewer가 동일하게 재사용.
+// ---------------------------------------------------------------------------
+function triggerFileDownload(content: string | (string | Uint8Array)[], filename: string) {
+  const parts = Array.isArray(content) ? content : [content];
+  const blob = new Blob(parts, { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadPS1(config: WidgetConfig) {
+  // UTF-8 with BOM to ensure Korean text doesn't break in legacy Windows PowerShell 5.1
+  const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+  triggerFileDownload([bom, generatePowerShellScript(config)], 'NEWSchoolWidget.ps1');
+}
+
+function downloadAllInOneBat(config: WidgetConfig) {
+  // IMPORTANT: DO NOT add BOM to .bat files as cmd.exe cannot parse BOM!
+  triggerFileDownload(generateAllInOneBat(config), 'NEWSchoolWidget_원클릭_실행.bat');
+}
+
+async function copyScriptToClipboard(config: WidgetConfig) {
+  await navigator.clipboard.writeText(generatePowerShellScript(config));
+}
 
 const DEFAULT_CONFIG: WidgetConfig = {
   school: DEFAULT_SCHOOL,
@@ -74,6 +106,8 @@ const DEFAULT_CONFIG: WidgetConfig = {
   widgetWidth: 330,
   userRole: 'teacher',
   fontScale: 1.0,
+  autoStartOnLogin: false,
+  cornerRadius: 18,
 };
 
 // ---------------------------------------------------------------------------
@@ -299,6 +333,21 @@ const GuideSection: React.FC = () => {
           </div>
 
           <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60">
+            <div className="font-bold text-blue-300 mb-1">Q. 작업표시줄/작업관리자에 "Windows PowerShell"이라고 뜨던 게 왜 없어졌나요?</div>
+            <p className="text-slate-400 leading-relaxed">
+              최초 실행 시에는 지금까지처럼 PowerShell을 통해 위젯이 즉시 뜨지만, 그 순간 뒤에서 자동으로 이 설정 그대로 컴파일된 나만의 전용 실행 파일(<code>%LOCALAPPDATA%\NEWSchoolWidget\NEWSchoolWidget.exe</code>)을 만들어 둡니다.
+              <strong className="text-slate-300"> 두 번째 실행부터는 그 전용 실행 파일로 바로 켜지기 때문에</strong> 작업표시줄/작업관리자에 "학교 생활 위젯"이라는 고유 이름과 아이콘으로 표시되고, PowerShell 보안 경고도 더 이상 거치지 않습니다. (최초 1회 컴파일 시 인터넷 연결이 필요하며, 스튜디오에서 설정을 바꿔 새로 다운로드하면 다음 실행 때 자동으로 다시 컴파일됩니다.)
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60">
+            <div className="font-bold text-blue-300 mb-1">Q. 컴퓨터를 켤 때마다 자동으로 위젯이 뜨게 하려면요?</div>
+            <p className="text-slate-400 leading-relaxed">
+              예전처럼 <code>shell:startup</code> 폴더에 직접 파일을 넣지 않아도 됩니다. <strong>[위젯 커스텀 설정] → [디자인 & 스냅]</strong> 탭의 <strong>"컴퓨터 시작 시 자동 실행"</strong> 체크박스를 켜고 위젯을 한 번 실행하면, 다음 로그인부터 자동으로 켜지도록 위젯이 스스로 등록합니다. 끄고 싶으면 체크박스를 해제하고 다시 한 번 실행하면 자동으로 해제됩니다.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60">
             <div className="font-bold text-blue-300 mb-1">Q. 위젯을 종료하거나 다시 켜고 싶어요.</div>
             <p className="text-slate-400 leading-relaxed">
               위젯 오른쪽 상단의 <strong>[✕]</strong> 닫기 버튼을 누르면 언제든지 깔끔하게 종료됩니다. 다시 켤 때는 스크립트 또는 .bat 파일을 다시 실행하시면 됩니다.
@@ -325,7 +374,7 @@ const CodeViewer: React.FC<CodeViewerProps> = ({ config }) => {
 
   const handleCopyCode = async () => {
     try {
-      await navigator.clipboard.writeText(scriptContent);
+      await copyScriptToClipboard(config);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -333,34 +382,8 @@ const CodeViewer: React.FC<CodeViewerProps> = ({ config }) => {
     }
   };
 
-  const handleDownloadPS1 = () => {
-    // UTF-8 with BOM to ensure Korean text doesn't break in legacy Windows PowerShell 5.1
-    const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-    const blob = new Blob([bom, scriptContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'NEWSchoolWidget.ps1';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadBAT = () => {
-    // Generate standalone All-In-One bat with embedded PowerShell code
-    // IMPORTANT: DO NOT add BOM to .bat files as cmd.exe cannot parse BOM!
-    const batContent = generateAllInOneBat(config);
-    const blob = new Blob([batContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'NEWSchoolWidget_원클릭_실행.bat';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  const handleDownloadPS1 = () => downloadPS1(config);
+  const handleDownloadBAT = () => downloadAllInOneBat(config);
 
   return (
     <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden relative">
@@ -533,7 +556,9 @@ export default function App() {
   const [config, setConfig] = useState<WidgetConfig>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      // 예전 버전에서 저장된 설정에는 이번에 추가된 필드(자동 시작/강조색/모서리 반경 등)가 없을
+      // 수 있으므로 기본값과 병합해서 undefined 필드가 생기지 않도록 함
+      if (saved) return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
     } catch (e) {
       console.warn('Failed to load local config', e);
     }
@@ -542,6 +567,22 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<'simulator' | 'config' | 'code' | 'guide'>('simulator');
   const [quickCopied, setQuickCopied] = useState<boolean>(false);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(ONBOARDING_DISMISSED_KEY) !== '1';
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const dismissOnboarding = () => {
+    setShowOnboarding(false);
+    try {
+      localStorage.setItem(ONBOARDING_DISMISSED_KEY, '1');
+    } catch (e) {
+      // localStorage unavailable — dismissal just won't persist across reloads
+    }
+  };
 
   // Save config on changes
   useEffect(() => {
@@ -552,37 +593,11 @@ export default function App() {
     }
   }, [config]);
 
-  const handleDownloadPS1 = () => {
-    const script = generatePowerShellScript(config);
-    const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-    const blob = new Blob([bom, script], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'NEWSchoolWidget.ps1';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadBAT = () => {
-    const batContent = generateAllInOneBat(config);
-    // DO NOT add BOM to .bat files as cmd.exe cannot parse UTF-8 BOM
-    const blob = new Blob([batContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'NEWSchoolWidget_원클릭_실행.bat';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  const handleDownloadPS1 = () => downloadPS1(config);
+  const handleDownloadBAT = () => downloadAllInOneBat(config);
 
   const handleQuickCopy = async () => {
-    const script = generatePowerShellScript(config);
-    await navigator.clipboard.writeText(script);
+    await copyScriptToClipboard(config);
     setQuickCopied(true);
     setTimeout(() => setQuickCopied(false), 2000);
   };
@@ -705,6 +720,41 @@ export default function App() {
             <span>초보자 실행 가이드</span>
           </button>
         </div>
+
+        {/* First-visit onboarding banner */}
+        {showOnboarding && (
+          <div className="relative p-4 rounded-2xl bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-purple-900/40 border border-blue-500/30">
+            <button
+              type="button"
+              onClick={dismissOnboarding}
+              className="absolute top-3 right-3 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              title="닫기"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-2 text-blue-400 font-bold text-sm mb-3">
+              <Sparkles className="w-4 h-4" />
+              <span>처음이신가요? 3단계면 끝나요</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pr-6">
+              <div className="flex items-start gap-2">
+                <span className="w-5 h-5 shrink-0 rounded-full bg-blue-600 text-white font-bold text-[12px] flex items-center justify-center mt-0.5">1</span>
+                <p className="text-sm text-slate-300"><strong className="text-white">설정</strong> 탭에서 학교·시간표를 등록하세요.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <ArrowRight className="w-3.5 h-3.5 text-slate-600 mt-1.5 hidden sm:block" />
+                <span className="w-5 h-5 shrink-0 rounded-full bg-blue-600 text-white font-bold text-[12px] flex items-center justify-center mt-0.5 sm:hidden">2</span>
+                <span className="w-5 h-5 shrink-0 rounded-full bg-blue-600 text-white font-bold text-[12px] hidden sm:flex items-center justify-center mt-0.5">2</span>
+                <p className="text-sm text-slate-300">우측 상단 <strong className="text-white">원클릭 실행용 .bat</strong>을 다운로드하세요.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <ArrowRight className="w-3.5 h-3.5 text-slate-600 mt-1.5 hidden sm:block" />
+                <span className="w-5 h-5 shrink-0 rounded-full bg-blue-600 text-white font-bold text-[12px] flex items-center justify-center mt-0.5">3</span>
+                <p className="text-sm text-slate-300">더블클릭! 최초 1회만 전용 실행 파일이 자동 생성되고, 다음부터는 PowerShell 없이 바로 실행됩니다.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tab 1: Simulator View */}
         {activeTab === 'simulator' && (
