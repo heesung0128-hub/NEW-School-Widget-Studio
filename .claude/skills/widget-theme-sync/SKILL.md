@@ -17,9 +17,11 @@ description: >
 이 프로젝트는 하나의 위젯을 두 번 구현한다:
 
 1. **브라우저 시뮬레이터** — [Widget.tsx](../../../src/components/Widget.tsx) 가 Tailwind 클래스로 렌더링
-2. **실제 윈도우 위젯** — [powerShellGenerator.ts](../../../src/utils/powerShellGenerator.ts) 가 같은 색을 WPF ARGB 헥스 문자열로 하드코딩해서 `.ps1`/`.exe`에 굽는다
+2. **실제 윈도우 위젯** — [powerShellGenerator.ts](../../../src/utils/powerShellGenerator.ts) 안에 생성되는 PowerShell `Get-ThemeColors` 함수가 같은 색을 WPF ARGB 헥스 문자열로 계산한다
 
 둘 사이에 공유되는 색상 소스가 없다. Tailwind는 브라우저가 CSS로 해석하고, WPF는 별도로 계산된 헥스값을 받아야 하기 때문이다. 그래서 **테마를 하나 바꾸면 반드시 두 파일을 손으로 함께 고쳐야** 하고, 하나만 고치면 시뮬레이터에서는 예쁘게 보이는데 실제 위젯은 예전 색 그대로인 버그가 조용히 생긴다.
+
+> **구조 변경 참고(2026-09)**: 예전에는 `powerShellGenerator.ts`가 TS 생성 시점에 if/else로 색을 계산해서 `.ps1` 텍스트에 리터럴로 구워 넣었다. 지금은 설정이 `config.json`으로 분리되면서, 색 계산 자체가 **PowerShell 런타임 함수 `Get-ThemeColors`**(스크립트 안에 통째로 생성됨)로 옮겨갔다 — 위젯 최초 렌더링과 위젯 자체 "⚙ 설정" 창에서 테마를 바꿀 때(`Rebuild-Widget`) 모두 이 **하나의** 함수를 호출한다. 즉 "TS if/else 체인"을 grep해도 더 이상 안 나오니, 이 파일에서 색을 고치려면 `Get-ThemeColors` 함수를 찾을 것.
 
 ## 테마가 걸쳐 있는 4곳
 
@@ -29,8 +31,8 @@ description: >
 |---|---|---|
 | 1 | [src/types.ts:34](../../../src/types.ts) | `WidgetTheme` 유니언 타입 — 새 테마 키를 여기 추가 안 하면 타입 에러 |
 | 2 | [src/components/Widget.tsx:169-241](../../../src/components/Widget.tsx) | `themeClasses` 객체 — 시뮬레이터가 실제로 쓰는 Tailwind 클래스 |
-| 3 | [src/components/ConfigPanel.tsx:519-526](../../../src/components/ConfigPanel.tsx) | 테마 선택 UI 목록 (`id`/`name`/`desc`) — 여기 없으면 사용자가 그 테마를 고를 방법이 없음 |
-| 4 | [src/utils/powerShellGenerator.ts:62-137](../../../src/utils/powerShellGenerator.ts) | WPF ARGB 헥스 if/else 체인 — 실제 위젯이 쓰는 색 |
+| 3 | [src/components/ConfigPanel.tsx:519-526](../../../src/components/ConfigPanel.tsx) | 테마 선택 UI 목록 (`id`/`name`/`desc`) — 여기 없으면 사용자가 그 테마를 고를 방법이 없음 (위젯 자체 설정창의 테마 콤보박스는 `src/utils/psSettingsWindow.ts`의 `$Global:ThemeChoices` 배열이 별도로 갖고 있음 — 여기도 같이 추가해야 새 테마가 설정창에도 뜬다) |
+| 4 | `src/utils/powerShellGenerator.ts`의 `Get-ThemeColors` PowerShell 함수 (생성되는 스크립트 안, TS 코드가 아님 — `grep`으로 찾으려면 `"function Get-ThemeColors"` 또는 테마 id 문자열로 찾을 것) | WPF ARGB 헥스 switch 문 — 위젯 렌더링과 설정창 양쪽에서 공유되는 실제 위젯 색 계산 |
 
 ## Tailwind 투명도 → ARGB 알파 변환 공식
 
@@ -76,7 +78,7 @@ description: >
 
 1. **types.ts**: `WidgetTheme` 유니언에 새 키 추가
 2. **Widget.tsx**: `themeClasses`에 7개 필드(`container`, `card`, `border`, `text`, `subText`, `accent`, `accentBg`) 모두 채워서 추가 (`border`/`text`/`accent`는 실제 렌더링엔 안 쓰이지만 PowerShell 생성기 작성 시 참고용 소스로 유지한다)
-3. **ConfigPanel.tsx**: 테마 선택 목록에 `{ id, name, desc }` 추가 (한글 이름/설명 필요)
-4. **powerShellGenerator.ts**: if/else 체인에 새 분기 추가. 기존 관례를 따라 각 색 옆에 **원본 Tailwind 클래스를 주석으로 남긴다** (예: `// container bg-slate-900/90, card bg-slate-800/70, border border-slate-700/60, ..., accentBg bg-blue-600`) — 나중에 시뮬레이터와 다시 비교할 때 이 주석이 유일한 단서가 된다. 이때 주석에 적는 `border`/`accentBg` 값은 반드시 **1단계 `themeClasses`의 죽은 필드가 아니라 실제 렌더링되는 `container`/`card`/`accentBg` 값**을 기준으로 적는다
-5. 위 변환 공식으로 `containerBg`/`cardBg`/`cardBorder` 계산, `textPrimary`/`textSecondary`(서브 투명도 있으면 8자리 ARGB로)/`accentColor`/`accentButtonColor`는 Tailwind 색상표(예: slate-100 → `#F1F5F9`)에서 헥스값 가져오기. `accentButtonColor` 배경 위 글씨가 밝은 색(옐로/앰버 계열)이면 `buttonTextColor`를 검은색으로
-6. 브라우저에서 시뮬레이터를 띄워 새 테마를 선택해보고, "파워쉘 (.ps1) 코드" 탭에서 생성된 스크립트를 열어 같은 색인지(특히 `cardBorder`, `textSecondary`, `accentButtonColor`, `buttonTextColor`) 육안 또는 문자열 검색으로 대조
+3. **ConfigPanel.tsx**: 테마 선택 목록에 `{ id, name, desc }` 추가 (한글 이름/설명 필요). **psSettingsWindow.ts**의 `$Global:ThemeChoices` 배열(`@{ Id = "..."; Name = "..." }`)에도 같은 항목을 추가 — 안 하면 위젯 자체 설정창의 테마 콤보박스에 새 테마가 안 보인다
+4. **powerShellGenerator.ts의 `Get-ThemeColors` 함수**: `switch ($ThemeId)`에 새 분기(`"새테마-id" { ... }`) 추가. 기존 관례를 따라 각 색 옆에 **원본 Tailwind 클래스를 주석으로 남긴다** (예: `# container bg-slate-900/90, card bg-slate-800/70, border border-slate-700/60, ..., accentBg bg-blue-600`) — 나중에 시뮬레이터와 다시 비교할 때 이 주석이 유일한 단서가 된다. 이때 주석에 적는 `border`/`accentBg` 값은 반드시 **1단계 `themeClasses`의 죽은 필드가 아니라 실제 렌더링되는 `container`/`card`/`accentBg` 값**을 기준으로 적는다
+5. 위 변환 공식으로 `ContainerBg`/`CardBg`/`CardBorder` 계산, `TextPrimary`/`TextSecondary`(서브 투명도 있으면 8자리 ARGB로)/`AccentColor`/`AccentButtonColor`는 Tailwind 색상표(예: slate-100 → `#F1F5F9`)에서 헥스값 가져오기. `AccentButtonColor` 배경 위 글씨가 밝은 색(옐로/앰버 계열)이면 `ButtonTextColor`를 검은색으로
+6. 브라우저에서 시뮬레이터를 띄워 새 테마를 선택해보고, "파워쉘 (.ps1) 코드" 탭에서 생성된 스크립트를 열어 `Get-ThemeColors` 함수 안의 같은 분기가 같은 색인지(특히 `CardBorder`, `TextSecondary`, `AccentButtonColor`, `ButtonTextColor`) 육안 또는 문자열 검색으로 대조하고, 실제 Windows에서 실행해 위젯 자체 설정창에서도 새 테마를 선택해 색이 맞게 반영되는지 확인
