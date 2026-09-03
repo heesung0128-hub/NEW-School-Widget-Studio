@@ -33,8 +33,8 @@ import {
 } from 'lucide-react';
 import { generatePowerShellScript, generateAllInOneBat } from './utils/powerShellGenerator';
 
-const STORAGE_KEY = 'school_widget_config_v1';
-const ONBOARDING_DISMISSED_KEY = 'school_widget_onboarding_dismissed_v1';
+const STORAGE_KEY = 'school_widget_config_evolved_v1';
+const ONBOARDING_DISMISSED_KEY = 'school_widget_onboarding_dismissed_evolved_v1';
 
 // ---------------------------------------------------------------------------
 // 다운로드/복사 로직 — 헤더의 빠른 실행 버튼과 "코드" 탭의 CodeViewer가 동일하게 재사용.
