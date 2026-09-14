@@ -333,21 +333,6 @@ const GuideSection: React.FC = () => {
           </div>
 
           <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60">
-            <div className="font-bold text-blue-300 mb-1">Q. 작업표시줄/작업관리자에 "Windows PowerShell"이라고 뜨던 게 왜 없어졌나요?</div>
-            <p className="text-slate-400 leading-relaxed">
-              최초 실행 시에는 지금까지처럼 PowerShell을 통해 위젯이 즉시 뜨지만, 그 순간 뒤에서 자동으로 이 설정 그대로 컴파일된 나만의 전용 실행 파일(<code>%LOCALAPPDATA%\NEWSchoolWidget\NEWSchoolWidget.exe</code>)을 만들어 둡니다.
-              <strong className="text-slate-300"> 두 번째 실행부터는 그 전용 실행 파일로 바로 켜지기 때문에</strong> 작업표시줄/작업관리자에 "학교 생활 위젯"이라는 고유 이름과 아이콘으로 표시되고, PowerShell 보안 경고도 더 이상 거치지 않습니다. (최초 1회 컴파일 시 인터넷 연결이 필요하며, 스튜디오에서 설정을 바꿔 새로 다운로드하면 다음 실행 때 자동으로 다시 컴파일됩니다.)
-            </p>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60">
-            <div className="font-bold text-blue-300 mb-1">Q. 컴퓨터를 켤 때마다 자동으로 위젯이 뜨게 하려면요?</div>
-            <p className="text-slate-400 leading-relaxed">
-              예전처럼 <code>shell:startup</code> 폴더에 직접 파일을 넣지 않아도 됩니다. <strong>[위젯 커스텀 설정] → [디자인 & 스냅]</strong> 탭의 <strong>"컴퓨터 시작 시 자동 실행"</strong> 체크박스를 켜고 위젯을 한 번 실행하면, 다음 로그인부터 자동으로 켜지도록 위젯이 스스로 등록합니다. 끄고 싶으면 체크박스를 해제하고 다시 한 번 실행하면 자동으로 해제됩니다.
-            </p>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60">
             <div className="font-bold text-blue-300 mb-1">Q. 위젯을 종료하거나 다시 켜고 싶어요.</div>
             <p className="text-slate-400 leading-relaxed">
               위젯 오른쪽 상단의 <strong>[✕]</strong> 닫기 버튼을 누르면 언제든지 깔끔하게 종료됩니다. 다시 켤 때는 스크립트 또는 .bat 파일을 다시 실행하시면 됩니다.
@@ -403,7 +388,7 @@ const CodeViewer: React.FC<CodeViewerProps> = ({ config }) => {
           <button
             type="button"
             onClick={handleCopyCode}
-            className={`px-3 py-1.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-colors ${
               copied
                 ? 'bg-emerald-600 text-white'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
@@ -490,6 +475,7 @@ const CodeViewer: React.FC<CodeViewerProps> = ({ config }) => {
                 type="button"
                 onClick={() => setShowTroubleshoot(false)}
                 className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                aria-label="닫기"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -632,7 +618,7 @@ export default function App() {
             <button
               type="button"
               onClick={handleQuickCopy}
-              className={`px-3 py-1.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-colors ${
                 quickCopied
                   ? 'bg-emerald-600 text-white'
                   : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700'
@@ -645,7 +631,7 @@ export default function App() {
             <button
               type="button"
               onClick={handleDownloadPS1}
-              className="px-3.5 py-1.5 rounded-xl text-sm font-bold bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1.5 transition-all shadow-md shadow-blue-600/20"
+              className="px-3.5 py-1.5 rounded-xl text-sm font-bold bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1.5 transition-colors shadow-md shadow-blue-600/20"
             >
               <Download className="w-3.5 h-3.5" />
               <span>.ps1 다운로드</span>
@@ -654,7 +640,7 @@ export default function App() {
             <button
               type="button"
               onClick={handleDownloadBAT}
-              className="hidden sm:flex px-3 py-1.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white items-center gap-1.5 transition-all"
+              className="hidden sm:flex px-3 py-1.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white items-center gap-1.5 transition-colors"
               title="검은 콘솔창 없이 즉시 띄우는 배치파일"
             >
               <Play className="w-3.5 h-3.5" />
@@ -671,7 +657,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setActiveTab('simulator')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all shrink-0 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-bold transition-[background-color,color,box-shadow] shrink-0 ${
               activeTab === 'simulator'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -684,7 +670,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setActiveTab('config')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all shrink-0 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-bold transition-[background-color,color,box-shadow] shrink-0 ${
               activeTab === 'config'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -697,7 +683,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setActiveTab('code')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all shrink-0 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-bold transition-[background-color,color,box-shadow] shrink-0 ${
               activeTab === 'code'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -710,7 +696,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setActiveTab('guide')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all shrink-0 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm sm:text-base font-bold transition-[background-color,color,box-shadow] shrink-0 ${
               activeTab === 'guide'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -729,6 +715,7 @@ export default function App() {
               onClick={dismissOnboarding}
               className="absolute top-3 right-3 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
               title="닫기"
+              aria-label="닫기"
             >
               <X className="w-4 h-4" />
             </button>

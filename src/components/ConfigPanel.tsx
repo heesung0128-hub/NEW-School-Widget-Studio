@@ -248,16 +248,17 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
             {/* NEIS School Search Input */}
             <form onSubmit={handleSearchSchool} className="space-y-2">
-              <label className={`block ${sz('text-base','text-xs')} font-semibold text-slate-300`}>
+              <label htmlFor="neis-school-search" className={`block ${sz('text-base','text-xs')} font-semibold text-slate-300`}>
                 🔍 나이스(NEIS) 학교 검색
               </label>
               <div className="flex gap-2">
                 <input
+                  id="neis-school-search"
                   type="text"
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   placeholder="예: 서울고등학교, 대전중학교..."
-                  className={`flex-1 px-3 py-2 ${sz('text-base','text-xs')} rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500`}
+                  className={`flex-1 px-3 py-2 ${sz('text-base','text-xs')} rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500`}
                 />
                 <button
                   type="submit"
@@ -283,7 +284,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                     key={sch.schoolCode}
                     type="button"
                     onClick={() => handleSelectSchool(sch)}
-                    className="w-full text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-blue-900/40 border border-slate-700 hover:border-blue-500/50 transition-all flex items-center justify-between group"
+                    className="w-full text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-blue-900/40 border border-slate-700 hover:border-blue-500/50 transition-colors flex items-center justify-between group"
                   >
                     <div>
                       <div className={`${sz('text-base','text-xs')} font-bold text-slate-200 group-hover:text-blue-300`}>
@@ -308,14 +309,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className={`block ${sz('text-[14px]','text-[11px]')} text-slate-400 mb-1`}>
+                  <label htmlFor="meal-switch-time" className={`block ${sz('text-[14px]','text-[11px]')} text-slate-400 mb-1`}>
                     내일 급식 전환 기준 시각
                   </label>
                   <input
+                    id="meal-switch-time"
                     type="time"
                     value={config.mealSwitchTime}
                     onChange={(e) => onUpdateConfig({ ...config, mealSwitchTime: e.target.value })}
-                    className={`w-full px-3 py-1.5 ${sz('text-base','text-xs')} rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500`}
+                    className={`w-full px-3 py-1.5 ${sz('text-base','text-xs')} rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500`}
                   />
                   <span className={`${sz('text-[13px]','text-[10px]')} text-slate-400 mt-1 block`}>
                     설정한 시간 이후에는 자동으로 '내일의 급식'(금요일은 월요일)이 표시됩니다.
@@ -360,13 +362,13 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   value={newDDayTitle}
                   onChange={(e) => setNewDDayTitle(e.target.value)}
                   placeholder="예: 1학기 중간고사, 여름방학, 수능..."
-                  className={`px-3 py-1.5 ${sz('text-base','text-xs')} rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500`}
+                  className={`px-3 py-1.5 ${sz('text-base','text-xs')} rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500`}
                 />
                 <input
                   type="date"
                   value={newDDayDate}
                   onChange={(e) => setNewDDayDate(e.target.value)}
-                  className={`px-3 py-1.5 ${sz('text-base','text-xs')} rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500`}
+                  className={`px-3 py-1.5 ${sz('text-base','text-xs')} rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500`}
                 />
               </div>
               <button
@@ -410,6 +412,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                         disabled={idx === 0}
                         className="p-1.5 rounded-lg bg-slate-700/50 hover:bg-blue-600 hover:text-white text-slate-300 disabled:opacity-30 disabled:hover:bg-slate-700/50 disabled:hover:text-slate-300 transition-colors"
                         title={idx === 0 ? '첫 번째 항목입니다' : '위로 이동'}
+                        aria-label={idx === 0 ? '첫 번째 항목입니다' : '위로 이동'}
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
@@ -421,6 +424,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                         disabled={idx === config.ddays.length - 1}
                         className="p-1.5 rounded-lg bg-slate-700/50 hover:bg-blue-600 hover:text-white text-slate-300 disabled:opacity-30 disabled:hover:bg-slate-700/50 disabled:hover:text-slate-300 transition-colors"
                         title={idx === config.ddays.length - 1 ? '마지막 항목입니다' : '아래로 이동'}
+                        aria-label={idx === config.ddays.length - 1 ? '마지막 항목입니다' : '아래로 이동'}
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
@@ -431,6 +435,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                         onClick={() => handleDeleteDDay(d.id)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors ml-1"
                         title="D-Day 삭제"
+                        aria-label="D-Day 삭제"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -494,7 +499,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                             value={subject}
                             onChange={(e) => handleTimetableChange(day, pIdx, e.target.value)}
                             placeholder="-"
-                            className={`w-full px-1 py-1 ${sz('text-[14px]','text-[11px]')} text-center rounded bg-slate-900 border border-slate-700 text-slate-200 focus:outline-none focus:border-blue-500`}
+                            className={`w-full px-1 py-1 ${sz('text-[14px]','text-[11px]')} text-center rounded bg-slate-900 border border-slate-700 text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500`}
                           />
                         </div>
                       ))}
@@ -511,10 +516,10 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           <div className="space-y-4">
             {/* Themes */}
             <div>
-              <label className={`block ${sz('text-base','text-xs')} font-semibold text-slate-300 mb-2`}>
+              <label id="theme-picker-label" className={`block ${sz('text-base','text-xs')} font-semibold text-slate-300 mb-2`}>
                 🎨 위젯 테마 선택
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div role="group" aria-labelledby="theme-picker-label" className="grid grid-cols-2 gap-2">
                 {[
                   { id: 'dark-acrylic', name: '모던 다크 글래스', desc: '세련된 어두운 반투명' },
                   { id: 'light-acrylic', name: '클린 라이트 아크릴', desc: '밝고 산뜻한 화이트' },
@@ -529,7 +534,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                     key={th.id}
                     type="button"
                     onClick={() => onUpdateConfig({ ...config, theme: th.id as WidgetTheme })}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                    className={`p-2.5 rounded-xl border text-left transition-[background-color,border-color,color,box-shadow] ${
                       config.theme === th.id
                         ? 'bg-blue-600/20 border-blue-500 text-white shadow-xs'
                         : 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300'
@@ -628,14 +633,14 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
             {/* Snap Side */}
             <div>
-              <label className={`block ${sz('text-base','text-xs')} font-semibold text-slate-300 mb-2`}>
+              <label id="snap-side-label" className={`block ${sz('text-base','text-xs')} font-semibold text-slate-300 mb-2`}>
                 자동 스냅 위치
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div role="group" aria-labelledby="snap-side-label" className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => onUpdateConfig({ ...config, snapSide: 'left' })}
-                  className={`py-2 rounded-xl border ${sz('text-base','text-xs')} font-bold transition-all ${
+                  className={`py-2 rounded-xl border ${sz('text-base','text-xs')} font-bold transition-colors ${
                     config.snapSide === 'left'
                       ? 'bg-blue-600/20 border-blue-500 text-white'
                       : 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300'
@@ -646,7 +651,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => onUpdateConfig({ ...config, snapSide: 'right' })}
-                  className={`py-2 rounded-xl border ${sz('text-base','text-xs')} font-bold transition-all ${
+                  className={`py-2 rounded-xl border ${sz('text-base','text-xs')} font-bold transition-colors ${
                     config.snapSide === 'right' || !config.snapSide
                       ? 'bg-blue-600/20 border-blue-500 text-white'
                       : 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300'

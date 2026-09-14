@@ -252,7 +252,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
   return (
     <div
       id="school-widget-main-container"
-      className={`relative border transition-all duration-300 overflow-hidden select-none ${currentTheme.container}`}
+      className={`relative border transition-colors duration-300 overflow-hidden select-none ${currentTheme.container}`}
       style={{
         width: `${config.widgetWidth || 330}px`,
         opacity: config.opacity || 0.95,
@@ -335,7 +335,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
         {/* Timetable Section (1-4교시 / 5-7교시 2열 배치) */}
         <div
           id="widget-timetable-section"
-          className={`rounded-xl p-2.5 border transition-all ${currentTheme.card}`}
+          className={`rounded-xl p-2.5 border transition-colors ${currentTheme.card}`}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -350,7 +350,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
                   key={day}
                   type="button"
                   onClick={() => setSelectedDay(day)}
-                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-semibold transition-all ${
+                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-semibold transition-[background-color,color,box-shadow] ${
                     selectedDay === day
                       ? `${currentTheme.accentBg} shadow-xs`
                       : 'text-slate-400 hover:text-white'
@@ -420,7 +420,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
         {/* NEIS Meal Section (스크롤 없이 2열 그리드로 모든 메뉴 표시) */}
         <div
           id="widget-meal-section"
-          className={`rounded-xl p-2.5 border transition-all ${currentTheme.card}`}
+          className={`rounded-xl p-2.5 border transition-colors ${currentTheme.card}`}
         >
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-1.5">
@@ -473,7 +473,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
         {/* TO-DO List Section (Dynamic Height) */}
         <div
           id="widget-todo-section"
-          className={`rounded-xl p-2.5 border transition-all ${currentTheme.card}`}
+          className={`rounded-xl p-2.5 border transition-colors ${currentTheme.card}`}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
@@ -492,7 +492,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
               value={newTodoText}
               onChange={(e) => setNewTodoText(e.target.value)}
               placeholder="새로운 할 일 입력 (Enter)..."
-              className="flex-1 px-2.5 py-1 text-xs rounded-lg bg-black/25 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-400"
+              className="flex-1 px-2.5 py-1 text-xs rounded-lg bg-black/25 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus:border-blue-400"
             />
             <button
               type="submit"
@@ -517,7 +517,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
                   onDragStart={handleTodoDragStart(todo.id)}
                   onDragOver={handleTodoDragOver(todo.id)}
                   onDragEnd={handleTodoDragEnd}
-                  className={`group flex items-center justify-between p-1.5 rounded-lg border transition-all ${
+                  className={`group flex items-center justify-between p-1.5 rounded-lg border transition-[background-color,border-color,color,opacity] ${
                     draggedTodoId === todo.id ? 'opacity-40' : ''
                   } ${
                     todo.completed
@@ -542,6 +542,7 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
                     onClick={() => handleDeleteTodo(todo.id)}
                     className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 transition-opacity"
                     title="삭제"
+                    aria-label="할 일 삭제"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -757,8 +758,8 @@ export const DesktopSimulator: React.FC<DesktopSimulatorProps> = ({
         <div
           id="draggable-school-widget"
           onMouseDown={handleMouseDown}
-          className={`absolute z-20 transition-all ${
-            isDragging ? 'cursor-grabbing scale-[1.01] shadow-2xl opacity-90' : 'transition-all duration-300 ease-out'
+          className={`absolute z-20 transition-[transform,box-shadow,opacity] ${
+            isDragging ? 'cursor-grabbing scale-[1.01] shadow-2xl opacity-90' : 'duration-300 ease-out'
           }`}
           style={{
             transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
