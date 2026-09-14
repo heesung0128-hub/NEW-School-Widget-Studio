@@ -7,7 +7,7 @@ import { buildSettingsWindowLines } from './psSettingsWindow';
 // 이걸 빼먹으면 코드를 고쳐도 이미 설치된 사용자의 exe에는 영원히 반영되지 않는다.
 // 주의: 사용자 설정(학교/테마/...)은 이제 config.json으로 분리되어 있어서 이 해시에 안 들어간다 —
 // 설정 변경은 재컴파일 없이 즉시 반영되고(Rebuild-Widget), exe는 오직 "코드가 바뀐 경우"에만 다시 빌드하면 됨.
-const GENERATOR_VERSION = '2026-09-15.1';
+const GENERATOR_VERSION = '2026-09-15.2';
 
 function hashConfig(obj: unknown): string {
   const str = JSON.stringify(obj);
@@ -496,9 +496,10 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '        } elseif ($Type -eq "Meal") {',
     '            $path.Data = [System.Windows.Media.Geometry]::Parse("M8,2A2,2 0 0,0 6,4V6H4A2,2 0 0,0 2,8V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8A2,2 0 0,0 20,6H18V4A2,2 0 0,0 16,2H8M8,4H16V6H8V4M4,8H20V18H4V8Z")',
     '        } elseif ($Type -eq "ChecklistOutline") {',
-    '            # 시간표/급식 아이콘과 같은 스타일(테두리만, 속은 안 채워짐)을 내려고 안쪽 사각형을',
-    '            # 바깥 사각형보다 2px 작게 따로 그려서 EvenOdd 채우기 규칙으로 테두리만 남김',
-    '            $path.Data = [System.Windows.Media.Geometry]::Parse("M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z")',
+    '            # 시간표/급식 아이콘과 같은 스타일(테두리만, 속은 안 채워짐)로 테두리를 그리되,',
+    '            # 그 안에 체크 표시도 따로(테두리와 안 겹치므로 EvenOdd로 지워지지 않고 그대로',
+    '            # 남는) 그려서 "테두리 + 체크 표시"가 함께 보이게 함',
+    '            $path.Data = [System.Windows.Media.Geometry]::Parse("M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19ZM10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z")',
     '        }',
     '        return $path',
     '    }',
