@@ -7,7 +7,7 @@ import { buildSettingsWindowLines } from './psSettingsWindow';
 // 이걸 빼먹으면 코드를 고쳐도 이미 설치된 사용자의 exe에는 영원히 반영되지 않는다.
 // 주의: 사용자 설정(학교/테마/...)은 이제 config.json으로 분리되어 있어서 이 해시에 안 들어간다 —
 // 설정 변경은 재컴파일 없이 즉시 반영되고(Rebuild-Widget), exe는 오직 "코드가 바뀐 경우"에만 다시 빌드하면 됨.
-const GENERATOR_VERSION = '2026-09-15.2';
+const GENERATOR_VERSION = '2026-10-02.1';
 
 function hashConfig(obj: unknown): string {
   const str = JSON.stringify(obj);
@@ -310,7 +310,6 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '        }',
     '        $Global:ShowAllergies = [bool]$cfg.showAllergies',
     '        $Global:ShowCalories = [bool]$cfg.showCalories',
-    '        $Global:UserRoleText = if ($cfg.userRole -eq "teacher") { "교사용" } else { "학생용" }',
     '        $Global:AutoStartOnLogin = [bool]$cfg.autoStartOnLogin',
     '        $Global:TimetableData = @($cfg.timetable)',
     '        $Global:DDaysData = @($cfg.ddays)',
@@ -350,7 +349,6 @@ export function generatePowerShellScript(config: WidgetConfig): string {
     '                    <Border CornerRadius="4" Background="#333B82F6" BorderBrush="#4D60A5FA" BorderThickness="1" Padding="5,1,5,1">',
     '                        <TextBlock x:Name="TxtSchoolName" Text="$($Global:SchoolName)" FontSize="10" FontWeight="Bold" Foreground="#60A5FA"/>',
     '                    </Border>',
-    '                    <TextBlock x:Name="TxtUserRole" Text="$($Global:UserRoleText)" FontSize="10" Foreground="$($Global:Colors.TextSecondary)" Margin="6,0,0,0" VerticalAlignment="Center"/>',
     '                </StackPanel>',
     '                <TextBlock x:Name="TxtCurrentDate" Text="날짜 로딩 중..." FontSize="16" FontWeight="Bold" Foreground="$($Global:Colors.TextPrimary)" Margin="0,4,0,0"/>',
     '                <TextBlock x:Name="TxtCurrentTime" Text="00:00:00" FontSize="14" FontWeight="Medium" FontFamily="Consolas" Foreground="$($Global:Colors.TextSecondary)" Margin="0,2,0,0"/>',

@@ -48,7 +48,6 @@ export interface WidgetConfig {
   showAllergies: boolean;
   showCalories: boolean;
   widgetWidth: number; // default 320px
-  userRole: 'teacher' | 'student';
   gradeClass?: string; // e.g. "3-2"
   fontScale: number; // 0.85 ~ 1.3, 1.0 = 기본 글씨 크기
   autoStartOnLogin: boolean; // 컴퓨터 시작 시 자동 실행 (HKCU Run 키 등록)

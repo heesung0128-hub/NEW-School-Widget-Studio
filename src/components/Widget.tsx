@@ -254,9 +254,6 @@ export const SchoolWidgetCard: React.FC<SchoolWidgetCardProps> = ({
             <span className="text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-400/30">
               {config.school.schoolName || '학교 생활 위젯'}
             </span>
-            <span className="text-[10px] text-slate-400">
-              {config.userRole === 'teacher' ? '교사용' : '학생용'}
-            </span>
           </div>
           <div className="mt-1 flex items-baseline gap-2">
             <h2 className="text-base font-bold tracking-tight">

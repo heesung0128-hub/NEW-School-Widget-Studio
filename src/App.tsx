@@ -49,7 +49,6 @@ const DEFAULT_CONFIG: WidgetConfig = {
   showAllergies: true,
   showCalories: true,
   widgetWidth: 330,
-  userRole: 'teacher',
   fontScale: 1.0,
   autoStartOnLogin: false,
   cornerRadius: 18,
