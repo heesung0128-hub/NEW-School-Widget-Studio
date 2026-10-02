@@ -13,7 +13,7 @@ interface StepProps {
 const INSTALL_STEPS = [
   { title: '위젯 받기', body: '아래 파란 버튼을 눌러 파일을 내려받아요.' },
   { title: '파일 더블클릭', body: "내려받은 'NEWSchoolWidget_원클릭_실행' 파일을 두 번 클릭하면 위젯이 바로 떠요." },
-  { title: '끝!', body: '바탕화면에 "학교 생활 위젯" 바로가기도 자동으로 만들어져요. 다음부터는 그걸로 켜세요. 설정을 바꾸고 싶을 땐 위젯의 ⚙ 버튼이면 돼요.' },
+  { title: '끝!', body: '바탕화면에 "학교 생활 위젯" 바로가기도 자동으로 만들어져요. 다음부터는 그걸로 켜세요.' },
 ];
 
 const FAQS = [
@@ -97,22 +97,22 @@ export const DownloadStep: React.FC<StepProps> = ({ config, onUpdateConfig }) =>
 
         <div
           role="note"
-          className="mt-6 flex items-start gap-4 p-5 rounded-2xl border-2 border-amber-400 bg-amber-50"
+          className="mt-6 flex items-start gap-3 p-4 rounded-2xl border-2 border-amber-400 bg-amber-50"
         >
           <span
-            className="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-400 text-slate-900 shrink-0"
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-400 text-slate-900 shrink-0"
             aria-hidden="true"
           >
-            <Settings className="w-8 h-8" />
+            <Settings className="w-6 h-6" />
           </span>
           <div className="min-w-0">
-            <p className="text-lg sm:text-xl font-extrabold text-slate-900">
+            <p className="text-base font-bold text-slate-900">
               나중에 바꾸고 싶을 땐, 이 사이트에 다시 올 필요가 없어요!
             </p>
-            <p className="mt-1 text-base sm:text-lg font-semibold text-slate-800">
+            <p className="mt-0.5 text-sm sm:text-base text-slate-800">
               학교·시간표·색은 위젯 위쪽의{' '}
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-amber-400 text-slate-900 font-bold whitespace-nowrap">
-                <Settings className="w-4 h-4" aria-hidden="true" /> 설정(⚙)
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white border border-amber-400 text-slate-900 text-sm font-semibold whitespace-nowrap">
+                <Settings className="w-3.5 h-3.5" aria-hidden="true" /> 설정(⚙)
               </span>{' '}
               버튼에서 바로 바꿀 수 있어요.
             </p>
