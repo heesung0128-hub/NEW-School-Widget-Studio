@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { School, ArrowLeft, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { WidgetConfig } from './types';
 import { DEFAULT_SCHOOL } from './utils/neisApi';
-import { SchoolWidgetCard } from './components/Widget';
+import { PreviewPanel } from './components/PreviewPanel';
 import { Stepper } from './components/Stepper';
 import { SchoolStep } from './steps/SchoolStep';
 import { ScheduleStep } from './steps/ScheduleStep';
@@ -120,7 +120,7 @@ export default function App() {
           {previewOpen ? '미리보기 닫기' : '내 위젯 미리보기 보기'}
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-6 items-start">
           <div ref={contentRef} tabIndex={-1} className="space-y-5 focus:outline-none order-2 lg:order-1">
             {step === 0 && <SchoolStep config={config} onUpdateConfig={setConfig} />}
             {step === 1 && <ScheduleStep config={config} onUpdateConfig={setConfig} />}
@@ -146,17 +146,12 @@ export default function App() {
             </div>
           </div>
 
-          <aside
-            aria-label="내 위젯 미리보기"
-            className={`${previewOpen ? 'block' : 'hidden'} lg:block order-1 lg:order-2 lg:sticky lg:top-6`}
-          >
-            <div className="rounded-2xl bg-slate-200 border border-slate-300 p-4">
-              <div className="text-sm font-semibold text-slate-700 mb-3">내 위젯 미리보기</div>
-              <div className="overflow-x-auto">
-                <SchoolWidgetCard config={config} onUpdateConfig={setConfig} />
-              </div>
-            </div>
-          </aside>
+          <PreviewPanel
+            config={config}
+            onUpdateConfig={setConfig}
+            open={previewOpen}
+            className={`${previewOpen ? 'block' : 'hidden'} lg:block order-1 lg:order-2`}
+          />
         </div>
       </main>
     </div>
