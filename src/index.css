@@ -1,1 +1,23 @@
 @import "tailwindcss";
+
+/*
+ * 위젯 미리보기 카드 안쪽 요소들은 어두운 테마를 기준으로 글자/배경 색(text-slate-200, bg-white/5 등)이
+ * 고정돼 있어서, 밝은 테마('light-acrylic')에서는 글씨가 배경에 묻혀 안 보임 — 이 테마일 때만 안쪽
+ * 색을 밝은 배경용으로 바꿔줌(실제 윈도우 위젯의 밝은 테마 색과 같은 방향).
+ */
+.widget-light .text-slate-200 { color: #1e293b; }
+.widget-light .text-slate-300 { color: #334155; }
+.widget-light .text-slate-400 { color: #64748b; }
+.widget-light .bg-white\/5 { background-color: rgb(15 23 42 / 0.05); }
+.widget-light .bg-black\/20,
+.widget-light .bg-black\/25 { background-color: rgb(15 23 42 / 0.06); }
+.widget-light .border-white\/5,
+.widget-light .border-white\/10 { border-color: rgb(15 23 42 / 0.12); }
+.widget-light input.text-white { color: #0f172a; }
+.widget-light .text-slate-100,
+.widget-light .text-white:not([class*="bg-blue-600"]) { color: #0f172a; }
+.widget-light .text-blue-400,
+.widget-light .text-blue-300 { color: #1d4ed8; }
+.widget-light .text-emerald-400,
+.widget-light .text-emerald-300 { color: #047857; }
+.widget-light .text-amber-400 { color: #b45309; }
